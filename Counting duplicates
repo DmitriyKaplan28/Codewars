@@ -10,6 +10,7 @@ function duplicateCount(text){
           }
           soltingObject[str] = soltingObject[str] + 1;
         }
-    });
+    }
+);
     return result;
   }
