@@ -1,167 +1,26 @@
-function isKingInCheck(chessboard) {
-    for (let i = 0; i < chessboard.length; i++) {
-        for (let j = 0; j < chessboard[0].length; j++) {
-            if (chessboard[i][j] === "♔") {
-                return [i, j];
-            }
+const KING = '♔', S = 8;
+const TOME = {
+    '♛': {
+        propagate: S,
+        moves: [[1, 1], [1, -1], [-1, 1], [-1, -1], [0, 1], [0, -1], [-1, 0], [1, 0]]
+    },
+    '♝': {propagate: S, moves: [[1, 1], [1, -1], [-1, 1], [-1, -1]]},
+    '♜': {propagate: S, moves: [[0, 1], [0, -1], [-1, 0], [1, 0]]},
+    '♞': {
+        propagate: 1,
+        moves: [[2, 1], [2, -1], [-2, 1], [-2, -1], [1, 2], [-1, 2], [1, -2], [-1, -2],]
+    },
+    '♟': {propagate: 1, moves: [[1, 1], [1, -1]]},
+};
+
+function kingIsInCheck(bd) {
+    const isValid = (p, x, y, i) => 0 <= x && x < S && 0 <= y && y < S && i < p.propagate;
+    const kingInLine = (p, a, b) => p.moves.some(([dx, dy]) => {
+        for (let i = 0, x = a + dx, y = b + dy; isValid(p, x, y, i); i++, x += dx, y += dy) {
+            if (bd[x][y] == KING) return true;
+            if (bd[x][y] != ' ') return false;
         }
-    }
+    });
+    return bd.some((r, a) => r.some((c, b, _, p = TOME[c]) => p && kingInLine(p, a, b)));
 }
 
-function orthogonalCheck(chessboard, i, j, k1, k2) {
-    let [I, J] = [i, j];
-
-    // UP
-    while (I >= 0) {
-        if (I === k1 && J === k2) {
-            return true;
-        }
-        if (chessboard[I][J] != " " && I != i) {
-            break;
-        }
-        I--;
-    }
-
-    // DOWN
-    [I, J] = [i, j];
-    while (I < chessboard.length) {
-        if (I === k1 && J === k2) {
-            return true;
-        }
-        if (chessboard[I][J] != " " && I != i) {
-            break;
-        }
-        I++;
-    }
-
-    // LEFT
-    [I, J] = [i, j];
-    while (J >= 0) {
-        if (I === k1 && J === k2) {
-            return true;
-        }
-        if (chessboard[I][J] != " " && J != j) {
-            break;
-        }
-        J--;
-    }
-
-    // RIGHT
-    [I, J] = [i, j];
-    while (J < chessboard[0].length) {
-        if (I === k1 && J === k2) {
-            return true;
-        }
-        if (chessboard[I][J] != " " && J != j) {
-            break;
-        }
-        J++;
-    }
-    return false;
-}
-
-function diagonalCheck(chessboard, i, j, k1, k2) {
-    let [I, J] = [i, j];
-
-    // UP LEFT
-    while (I >= 0 && J >= 0) {
-        if (I === k1 && J === k2) {
-            return true;
-        }
-        if (chessboard[I][J] != " " && I != i && J != j) {
-            break;
-        }
-        I--;
-        J--;
-    }
-
-    // UP RIGHT
-    [I, J] = [i, j];
-    while (I >= 0 && J < chessboard[0].length) {
-        if (I === k1 && J === k2) {
-            return true;
-        }
-        if (chessboard[I][J] != " " && I != i && J != j) {
-            break;
-        }
-        I--;
-        J++;
-    }
-
-    // DOWN LEFT
-    [I, J] = [i, j];
-    while (I < chessboard.length && J >= 0) {
-        if (I === k1 && J === k2) {
-            return true;
-        }
-        if (chessboard[I][J] != " " && I != i && J != j) {
-            break;
-        }
-        I++;
-        J--;
-    }
-
-    // DOWN RIGHT
-    [I, J] = [i, j];
-    while (I < chessboard.length && J < chessboard[0].length) {
-        if (I === k1 && J === k2) {
-            return true;
-        }
-        if (chessboard[I][J] != " " && I != i && J != j) {
-            break;
-        }
-        I++;
-        J++;
-    }
-    return false;
-}
-
-function kingIsInCheck(chessboard) {
-    let knightMoves = [
-        [1, 2],
-        [-1, 2],
-        [1, -2],
-        [-1, -2],
-        [2, 1],
-        [-2, 1],
-        [2, -1],
-        [-2, -1],
-    ];
-
-    let [k1, k2] = findKing(chessboard);
-
-    for (let i = 0; i < chessboard.length; i++) {
-        for (let j = 0; j < chessboard[0].length; j++) {
-            if (chessboard[i][j] === "♛") {
-                if (orthogonalCheck(chessboard, i, j, k1, k2)) {
-                    return true;
-                } else if (diagonalCheck(chessboard, i, j, k1, k2)) {
-                    return true;
-                }
-            } else if (chessboard[i][j] === "♝") {
-                if (diagonalCheck(chessboard, i, j, k1, k2)) {
-                    return true;
-                }
-            } else if (chessboard[i][j] === "♜") {
-                if (orthogonalCheck(chessboard, i, j, k1, k2)) {
-                    return true;
-                }
-            } else if (chessboard[i][j] === "♟") {
-                if (i + 1 === k1 && j + 1 === k2) {
-                    return true;
-                } else if (i + 1 === k1 && j - 1 === k2) {
-                    return true;
-                }
-            } else if (chessboard[i][j] === "♞") {
-                for (let [dx, dy] of knightMoves) {
-                    let [I, J] = [i + dx, j + dy];
-                    if (I === k1 && J === k2) {
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-
-    return false;
-}
